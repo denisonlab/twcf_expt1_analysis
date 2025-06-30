@@ -1,0 +1,2 @@
+% compile for omnibus anova
+

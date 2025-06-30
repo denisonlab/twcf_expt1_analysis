@@ -1,0 +1,97 @@
+
+%% Setup 
+exptName = 'twcf_cue_gab_det'; 
+
+%% Calculate discrimination d'
+for iS=1:30
+    % Discrimination d'
+    gsdt.dis_dprime(iS,:,:) = a(iS).sdt.dis_correct_V.dprimeDis;
+    gsdt.dis_criterion(iS,:,:) = a(iS).sdt.dis_correct_V.criterionDis;
+
+    switch exptName
+        case 'twcf_cue_gab_det'
+            stimIdx = 2:8; % 1:7; 2:8; % don't plot stim absent
+
+            % Detection d' stimulus
+            gsdt.det_dprime_stim(iS,:,:) = a(iS).sdt.sawGrating.dprimeDetect;
+            gsdt.dis_criterion_stim(iS,:,:) = a(iS).sdt.sawGrating.criterionDetect;
+
+            % Detection d' feature
+            gsdt.det_dprime_feature(iS,:,:) = a(iS).sdt.sawOri.dprimeDetect;
+            gsdt.dis_criterion_feature(iS,:,:) = a(iS).sdt.sawOri.criterionDetect;
+
+        case 'twcf_cue_tex_det'
+            stimIdx = 1:7; % 1:7; 2:8; % don't plot stim absent
+
+            % Detection d' stimulus
+            gsdt.det_dprime_stim(iS,:,:) = a(iS).sdt.sawFigure.dprimeDetect;
+            gsdt.dis_criterion_stim(iS,:,:) = a(iS).sdt.sawFigure.criterionDetect;
+
+            % Detection d' feature
+            gsdt.det_dprime_feature(iS,:,:) = a(iS).sdt.sawShape.dprimeDetect;
+            gsdt.dis_criterion_feature(iS,:,:) = a(iS).sdt.sawShape.criterionDetect;
+    end
+end
+
+%% Setup 
+figure
+p = twcf_analysisParams;
+set(gcf,'Position',p.size.rect)
+hold on
+figureStyle
+% ylims = [0 1];
+% yticks(0:0.25:1)
+
+% xlim([stimLevels(1)-p.style.xBuffer stimLevels(end)+p.style.xBuffer])
+
+nAtt = 3; 
+
+xlim([2 5]) % [-0.8 5]
+ylim([-0.5 5])
+axis square
+
+% rl = refline(1/sqrt(2),0); % yes/no detection and 2IFC detection
+% mathematically have a sqrt(2) relationship in standard 2D sdt
+% rl.Color = [0.5 0.5 0.5]; 
+% 
+% rl = refline(1,0); 
+% rl.Color = [0.5 0.5 0.5]; 
+% rl.LineStyle = '--';
+
+xlabel('Discrimination \it{d''}')
+ylabel('Detection \it{d''}')
+
+xAX = get(gca,'XAxis');  
+yAX = get(gca,'YAxis');  
+xlab = get(gca,'XLabel');
+ylab = get(gca,'YLabel');
+
+set(xAX,'FontSize', p.style.textTickSize)
+set(yAX,'FontSize', p.style.textTickSize)
+set(xlab,'FontSize', p.style.textAxisSize)
+set(ylab,'FontSize', p.style.textAxisSize)
+
+% xtickformat('%.2f')
+% xtickangle(p.style.xtickangle)
+
+for iAtt = 1:nAtt
+    color = p.style.attColors(iAtt,:);
+    % Calculate means 
+    dis_dprime = squeeze(mean(gsdt.dis_dprime(:,stimIdx,iAtt),1,'omitnan'));
+    det_dprime_stim = squeeze(mean(gsdt.det_dprime_stim(:,stimIdx,iAtt),1,'omitnan'));
+    det_dprime_feature = squeeze(mean(gsdt.det_dprime_feature(:,stimIdx,iAtt),1,'omitnan'));
+    
+    % Calculate standard errors
+    dis_dprime_std = squeeze(std(gsdt.dis_dprime(:,stimIdx,iAtt),1,'omitnan'))/sqrt(30);
+    det_dprime_stim_std = squeeze(std(gsdt.det_dprime_stim(:,stimIdx,iAtt),1,'omitnan'))/sqrt(30);
+    det_dprime_feature_std = squeeze(std(gsdt.det_dprime_feature(:,stimIdx,iAtt),1,'omitnan'))/sqrt(30);
+
+    % Plot data
+    plot(dis_dprime,det_dprime_stim,'Color',color,'linewidth',p.style.fitLineWidth)
+
+    % Plot errorbar
+    errorbar(dis_dprime,det_dprime_stim,...
+        dis_dprime_std,dis_dprime_std,...
+        det_dprime_stim_std,det_dprime_stim_std,...
+        'Color',p.style.attColorsMutedLight(iAtt,:),'CapSize',0,'LineWidth',1,'LineStyle','none');
+end
